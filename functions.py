@@ -1,19 +1,26 @@
 # БИБЛИОТЕКА ИМПОРТОВ
-import sqlite3
+from aiogram.types import User
+from config import db
 
 
 
 # ПРОВЕРКИ ПОЛЬЗОВАТЕЛЯ
 
-class CheckUser:
-    '''Класс проверки пользователя'''
+class UserService:
+    '''Класс взаимодействий с пользователем'''
 
-    async def registration(userid: int) -> bool:
+    async def __init__(self, user: User, *args, **kwargs):
+        self.user = user
+
+
+    async def check_registration(self) -> bool:
         '''Проверяет зарегистрирован ли пользователь'''
 
-        db = sqlite3.connect('database.db')
-        all_users = db.cursor().execute('SELECT id FROM users').fetchall()
-        registred_users = [user[0] for user in all_users]
-        db.close()
+        return db.cursor().execute(f'SELECT id FROM users WHERE id = {self.user.id}').fetchone()
+    
 
-        return userid in registred_users
+    async def register_user(self) -> None:
+        '''Регистрирует нового пользователя'''
+        db.cursor().execute('INSERT INTO users (id, username, full_name) VALUES (?,?,?)',
+                            (self.user.id, f'@{self.user.username}', self.user.full_name))
+        db.commit()
